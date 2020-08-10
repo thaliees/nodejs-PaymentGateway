@@ -1,0 +1,234 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Payment Gateway",
+        "description": "This is a API designed to consume Service in Mobiles.",
+        "contact": {
+            "email": "heeytk@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        { "url": "https://paymentgateway-braintree.herokuapp.com/api", "description": "Production Server (Uses lives data)" }
+    ],
+    "tags": [
+        { "name": "Payment Gateway", "description": "Everything about Payment Gateway" }
+    ],
+    "paths": {
+        "/payment/": {
+            "post": {
+                "tags": [ "Payment Gateway" ],
+                "summary": "Request to create a transaction",
+                "operationId": "createTransaction",
+                "requestBody": {
+                    "description": "Info object that needs for to realize the transaction",
+                    "content": { "application/json": { "schema": { "$ref":"#/components/schemas/CreateTransactionPayPal" } } },
+                    "required": true
+                },
+                "responses": {
+                    "200": { "description": "Successful", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Response" } } } },
+                    "400": { "description": "Bad Request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+                    "500": { "description": "Server Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+                }
+            }
+        },
+        "/payment/paypal": {
+            "post": {
+                "tags": [ "Payment Gateway" ],
+                "summary": "Request to create a transaction using PayPal",
+                "operationId": "createTransactionPayPal",
+                "requestBody": {
+                    "description": "Info object that needs for to realize the transaction",
+                    "content": { "application/json": { "schema": { "$ref":"#/components/schemas/CreateTransactionPayPal" } } },
+                    "required": true
+                },
+                "responses": {
+                    "200": { "description": "Successful", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResponsePayPal" } } } },
+                    "400": { "description": "Bad Request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+                    "500": { "description": "Server Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "code": { "type": "integer", "format": "int32" },
+                    "message": { "type": "string" }
+                },
+                "required": [ "code", "message" ]
+            },
+            "CreateTransactionPayPal": {
+                "type": "object",
+                "properties": {
+                    "paymentMethodNonce": { "type": "string" },
+                    "deviceData": { "type": "string" },
+                    "totalAmount": { "type": "integer", "format": "double" },
+                    "taxAmount": { "type": "integer", "format": "double" },
+                    "discountAmount": { "type": "integer", "format": "double" },
+                    "shippingAmount": { "type": "integer", "format": "double" },
+                    "currency": { "type": "string", "enum": ["USD", "MXN"] },
+                    "shipping": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "lastName": { "type": "string" },
+                            "address": { "type": "string" },
+                            "postalCode": { "type": "string" },
+                            "city": { "type": "string" }
+                        },
+                        "required": [ "name", "lastName", "address", "postalCode", "city" ]
+                    },
+                    "billing": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "lastName": { "type": "string" },
+                            "address": { "type": "string" },
+                            "postalCode": { "type": "string" },
+                            "city": { "type": "string" }
+                        },
+                        "required": [ "name", "lastName", "address", "postalCode", "city" ]
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "productCode": { "type": "string", "description": "Product or UPC code for the item. Maximum 12 characters, or 127 characters for PayPal transactions." },
+                                "kind": { "type": "string", "enum": [ "debit", "credit" ] },
+                                "description": { "type": "string" },
+                                "quantity": { "type": "integer", "format": "double" },
+                                "unitAmount": { "type": "integer", "format": "double" },
+                                "totalAmount": { "type": "integer", "format": "double" },
+                                "taxAmount": { "type": "integer", "format": "double" },
+                                "discountAmount": { "type": "integer", "format": "double" }
+                            },
+                            "required": [ "name", "productCode", "kind", "description", "quantity", "unitAmount", "totalAmount", "taxAmount", "discountAmount" ]
+                        }
+                    }
+                },
+                "required": [ "paymentMethodNonce", "deviceData", "totalAmount", "currency" ]
+            },
+            "ResponsePayPal": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "status": { "type": "string" },
+                    "type": { "type": "string" },
+                    "currency": { "type": "string" },
+                    "total": { "type": "string" },
+                    "taxAmount": { "type": "string" },
+                    "merchantAccountId": { "type": "string" },
+                    "orderId": { "type": "string" },
+                    "createdAt": { "type": "string" },
+                    "updatedAt": { "type": "string" },
+                    "paymentInstrumentType": { "type": "string" },
+                    "customer": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/Customer"
+                    },
+                    "billing": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/Address"
+                    },
+                    "shipping": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/Address"
+                    },
+                    "paypalAccount": {
+                        "type": "object",
+                        "properties": {
+                            "token": { "type": "string" },
+                            "paymentId": { "type": "string" },
+                            "debugId": { "type": "string" },
+                            "payeeId": { "type": "string" },
+                            "payerId": { "type": "string" },
+                            "payerEmail": { "type": "string" },
+                            "payerName": { "type": "string" },
+                            "payerLastName": { "type": "string" },
+                            "payerStatus": { "type": "string" },
+                            "sellerProtectionStatus": { "type": "string" },
+                            "captureId": { "type": "string" },
+                            "transactionFeeAmount": { "type": "string" },
+                            "transactionFeeCurrency": { "type": "string" }
+                        }
+                    }
+                }
+            },
+            "Response": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "status": { "type": "string" },
+                    "type": { "type": "string" },
+                    "currency": { "type": "string" },
+                    "total": { "type": "string" },
+                    "taxAmount": { "type": "string" },
+                    "merchantAccountId": { "type": "string" },
+                    "orderId": { "type": "string" },
+                    "createdAt": { "type": "string" },
+                    "updatedAt": { "type": "string" },
+                    "paymentInstrumentType": { "type": "string" },
+                    "customer": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/Customer"
+                    },
+                    "billing": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/Address"
+                    },
+                    "shipping": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/Address"
+                    },
+                    "creditCard": {
+                        "type": "object",
+                        "properties": {
+                            "token": { "type": "string" },
+                            "bin": { "type": "string" },
+                            "last4": { "type": "string" },
+                            "cardType": { "type": "string" },
+                            "expirationMonth": { "type": "string" },
+                            "expirationYear": { "type": "string" },
+                            "expirationDate": { "type": "string" },
+                            "customerLocation": { "type": "string" },
+                            "cardHolderName": { "type": "string" },
+                            "debit": { "type": "string" },
+                            "prepaid": { "type": "string" },
+                            "commercial": { "type": "string" },
+                            "healthcare": { "type": "string" },
+                            "payroll": { "type": "string" }
+                        }
+                    }
+                }
+            },
+            "Customer": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "lastName": { "type": "string" }
+                }
+            },
+            "Address": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "lastName": { "type": "string" },
+                    "address": { "type": "string" },
+                    "city": { "type": "string" },
+                    "postalCode": { "type": "string" }
+                }
+            }
+        }
+    }
+}
